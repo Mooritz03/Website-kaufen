@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="de" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SITELAB — Projekt-Konfigurator</title>
+  <meta name="description" content="Stell dir dein Website-Projekt in wenigen Schritten zusammen und erhalte ein unverbindliches Angebot von SITELAB." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        colors: {
+          paper: '#f5f2ec', panel: '#ece6da', surface: '#ffffff',
+          ink: '#1c1813', body: '#6a655c', line: '#e3ddd2',
+          night: '#161310', cream: '#f6f3ee', muted: '#a8a39a',
+          sand: '#FA9F42', 'sand-deep': '#C26E16',
+        },
+        fontFamily: { display: ['Space Grotesk','ui-sans-serif','sans-serif'], body: ['Inter','ui-sans-serif','sans-serif'] },
+        maxWidth: { shell: '1080px' },
+      } },
+    };
+  </script>
+  <style>
+    :root { --ease-spring: cubic-bezier(0.16,1,0.3,1); --ease-pop: cubic-bezier(0.34,1.4,0.64,1); }
+    html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { font-family:'Inter',sans-serif; color:#6a655c; background:#f5f2ec; line-height:1.6; }
+    ::selection { background:#FA9F42; color:#1c1813; }
+    .font-display { font-family:'Space Grotesk',sans-serif; }
+    .h-tight { letter-spacing:-0.03em; }
+
+    .btn-primary { transition: transform .35s var(--ease-pop), box-shadow .35s var(--ease-spring), opacity .3s; box-shadow:0 10px 30px -10px rgba(250,159,66,.6); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow:0 16px 40px -10px rgba(250,159,66,.7); }
+    .btn-primary:active { transform: translateY(0) scale(.985); }
+    .btn-primary:disabled { opacity:.45; box-shadow:none; transform:none; cursor:not-allowed; }
+    .btn-ghost { transition: border-color .3s, background-color .3s, transform .3s var(--ease-pop); }
+    .btn-ghost:hover { transform: translateY(-2px); border-color: rgba(28,24,19,.3); }
+
+    a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline:2px solid #C26E16; outline-offset:3px; border-radius:3px;
+    }
+
+    /* selectable option card */
+    .opt { position:relative; text-align:left; transition: border-color .25s, box-shadow .25s, background-color .25s; }
+    .opt:hover { border-color:#d6ccb9; }
+    .opt.selected { border-color:#FA9F42; box-shadow:0 0 0 3px rgba(250,159,66,.22); }
+    .opt .tick { transition: background-color .25s, border-color .25s; }
+    .opt .tick svg { opacity:0; transition: opacity .2s; }
+    .opt.selected .tick { background:#FA9F42; border-color:#FA9F42; }
+    .opt.selected .tick svg { opacity:1; }
+
+    .input { transition: border-color .3s, background-color .3s; }
+    .input:focus { border-color:#FA9F42; outline:none; background:#fff; }
+    .input.err { border-color:#d8553a; background:#fdf3f0; }
+
+    details > summary { list-style:none; cursor:pointer; }
+    details > summary::-webkit-details-marker { display:none; }
+    details[open] .chev { transform: rotate(180deg); }
+    .chev { transition: transform .3s var(--ease-spring); }
+
+    .step { animation: stepIn .45s var(--ease-spring); }
+    @keyframes stepIn { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform:none; } }
+
+    .bar-fill { transition: width .5s var(--ease-spring); }
+
+    @media (prefers-reduced-motion: reduce) {
+      .step { animation:none !important; }
+      * { scroll-behavior:auto !important; }
+    }
+  </style>
+</head>
+<body class="font-body min-h-screen">
+
+  <!-- HEADER -->
+  <header class="border-b border-line bg-paper/85 backdrop-blur-xl">
+    <div class="mx-auto flex h-16 max-w-shell items-center justify-between px-5 sm:px-8">
+      <a href="index.html" class="group flex items-center gap-2.5" aria-label="SITELAB Startseite">
+        <span class="relative block h-7 w-7" aria-hidden="true">
+          <span class="absolute left-0 top-1.5 h-5 w-5 rounded-[6px] bg-sand transition-transform duration-500 group-hover:-translate-x-0.5 group-hover:translate-y-0.5"></span>
+          <span class="absolute left-1.5 top-0 h-5 w-5 rounded-[6px] bg-sand-deep transition-transform duration-500 group-hover:translate-x-0.5"></span>
+        </span>
+        <span class="font-display text-xl font-bold tracking-tight text-ink">SITE<span class="text-sand-deep">LAB</span></span>
+      </a>
+      <a href="index.html" class="inline-flex items-center gap-2 text-sm font-medium text-body transition-colors hover:text-ink">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+        Zurück zur Startseite
+      </a>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-shell px-5 pb-40 pt-12 sm:px-8 sm:pt-16">
+
+    <!-- INTRO -->
+    <div class="text-center">
+      <span class="text-xs font-semibold uppercase tracking-[0.2em] text-sand-deep">Projekt-Konfigurator</span>
+      <h1 class="font-display h-tight mt-3 text-3xl font-bold text-ink sm:text-4xl">Stell dir dein Projekt zusammen</h1>
+      <p class="mx-auto mt-3 max-w-xl text-body">In fünf kurzen Schritten zu deinem unverbindlichen Angebot. Du siehst den Richtpreis live mit — verbindlich wird nichts, bis wir gesprochen haben.</p>
+    </div>
+
+    <!-- STEPPER -->
+    <div class="mx-auto mt-10 max-w-2xl">
+      <ol id="stepper" class="flex items-center justify-between">
+        <!-- filled by JS -->
+      </ol>
+      <div class="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-line">
+        <div id="barFill" class="bar-fill h-full rounded-full bg-sand" style="width:0%"></div>
+      </div>
+    </div>
+
+    <!-- STEPS -->
+    <div class="mt-12">
+
+      <!-- STEP 1 — PAKET -->
+      <section data-step="1" class="step">
+        <div class="text-center">
+          <h2 class="font-display h-tight text-2xl font-bold text-ink sm:text-3xl">Aufbau deiner Website</h2>
+          <p class="mt-2 text-body">Wähle die Basis für dein Projekt — den Rest verfeinern wir gemeinsam.</p>
+        </div>
+        <div class="mt-8 grid gap-5 md:grid-cols-3">
+          <button type="button" class="opt opt-pkg rounded-2xl border border-line bg-surface p-6" data-id="landing" data-price="690" data-label="Landing — One-Page-Website" aria-pressed="false">
+            <span class="tick absolute right-4 top-4 grid h-6 w-6 place-items-center rounded-full border border-line"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+            <div class="text-xs font-semibold uppercase tracking-wider text-body">One-Page-Website</div>
+            <h3 class="font-display mt-1 text-lg font-semibold text-ink">Landing</h3>
+            <p class="mt-2 text-sm text-body">Alles Wichtige auf einer Seite — ideal für Produkte, Kampagnen oder einen klaren Auftritt.</p>
+            <div class="mt-4"><span class="text-sm text-body/70 line-through">statt 990 €</span> <span class="font-display text-2xl font-bold text-ink">ab 690 €</span></div>
+            <details class="mt-4 border-t border-line pt-3">
+              <summary class="flex items-center justify-between text-xs font-medium text-sand-deep">Alle Vorteile einblenden <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary>
+              <ul class="mt-3 space-y-1.5 text-xs text-body">
+                <li>· Individuelles Design</li><li>· Für Mobilgeräte optimiert</li><li>· Kontaktformular</li><li>· Basis-SEO</li>
+              </ul>
+            </details>
+          </button>
+
+          <button type="button" class="opt opt-pkg rounded-2xl border-2 border-sand bg-surface p-6" data-id="business" data-price="1690" data-label="Business — Mehrseitige Website" aria-pressed="false">
+            <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-sand px-3 py-0.5 text-[11px] font-semibold text-ink">Beliebt</span>
+            <span class="tick absolute right-4 top-4 grid h-6 w-6 place-items-center rounded-full border border-line"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+            <div class="text-xs font-semibold uppercase tracking-wider text-body">Mehrseitige Website</div>
+            <h3 class="font-display mt-1 text-lg font-semibold text-ink">Business</h3>
+            <p class="mt-2 text-sm text-body">Mehrere Unterseiten und ein CMS zum Selbstpflegen — für Unternehmen mit mehr Inhalt.</p>
+            <div class="mt-4"><span class="text-sm text-body/70 line-through">statt 1.990 €</span> <span class="font-display text-2xl font-bold text-ink">ab 1.690 €</span></div>
+            <details class="mt-4 border-t border-line pt-3">
+              <summary class="flex items-center justify-between text-xs font-medium text-sand-deep">Alle Vorteile einblenden <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary>
+              <ul class="mt-3 space-y-1.5 text-xs text-body">
+                <li>· Bis zu 6 Unterseiten</li><li>· Pflegbares CMS</li><li>· SEO-Grundoptimierung</li><li>· 3 Monate Support inklusive</li>
+              </ul>
+            </details>
+          </button>
+
+          <button type="button" class="opt opt-pkg rounded-2xl border border-line bg-surface p-6" data-id="individuell" data-price="0" data-individuell="1" data-label="Individuell — Shop / Web-App" aria-pressed="false">
+            <span class="tick absolute right-4 top-4 grid h-6 w-6 place-items-center rounded-full border border-line"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+            <div class="text-xs font-semibold uppercase tracking-wider text-body">Shop / Web-App</div>
+            <h3 class="font-display mt-1 text-lg font-semibold text-ink">Individuell</h3>
+            <p class="mt-2 text-sm text-body">Onlineshop, Buchung, Login oder Sonderfunktionen — komplett nach Maß gebaut.</p>
+            <div class="mt-4"><span class="font-display text-2xl font-bold text-ink">auf Anfrage</span></div>
+            <details class="mt-4 border-t border-line pt-3">
+              <summary class="flex items-center justify-between text-xs font-medium text-sand-deep">Alle Vorteile einblenden <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></summary>
+              <ul class="mt-3 space-y-1.5 text-xs text-body">
+                <li>· Onlineshop / E-Commerce</li><li>· Buchungs- &amp; Login-Systeme</li><li>· Individuelle Funktionen</li><li>· Laufende Weiterentwicklung</li>
+              </ul>
+            </details>
+          </button>
+        </div>
+      </section>
+
+      <!-- STEP 2 — ZUSATZLEISTUNGEN -->
+      <section data-step="2" class="step" hidden>
+        <div class="text-center">
+          <h2 class="font-display h-tight text-2xl font-bold text-ink sm:text-3xl">Zusatzleistungen</h2>
+          <p class="mt-2 text-body">Mach deine Website noch stärker — wähle aus, was du brauchst. Alles optional.</p>
+        </div>
+        <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3" data-group="addon">
+          <button type="button" class="opt opt-multi rounded-2xl border border-line bg-surface p-5" data-id="design" data-price="399" data-label="Premium-Design" aria-pressed="false">
+            <span class="tick absolute right-4 top-4 grid h-6 w-6 place-items-center rounded-full border border-line"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+            <h3 class="font-display pr-8 text-base font-semibold text-ink">Premium-Design</h3>
+            <p class="mt-2 text-sm text-body">Noch individuelleres Design mit mehr Details, Animationen und Feinschliff.</p>
+            <div class="mt-4 font-display text-lg font-bold text-sand-deep">+ 399 €</div>
+          </button>
+          <button type="button" class="opt opt-multi rounded-2xl border border-line bg-surface p-5" data-id="logo" data-price="299" data-label="Logoerstellung" aria-pressed="false">
+            <span class="tick absolute right-4 top-4 grid h-6 w-6 place-items-center rounded-full border border-line"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+            <h3 class="font-display pr-8 text-base font-semibold text-ink">Logoerstellung</h3>
+            <p class="mt-2 text-sm text-body">Ein hochwertiges Logo, das genau zu deiner Marke passt.</p>
+            <div class="mt-4 font-display text-lg font-bold text-sand-deep">+ 299 €</div>
+          </button>
+          <button type="button" class="opt opt-multi rounded-2xl border border-line bg-surface p-5" data-id="texte" data-price="249" data-label="Texte &amp; Copywriting" aria-pressed="false">
+            <span class="tick absolute right-4 top-4 grid h-6 w-6 place-items-center rounded-full border border-line"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+            <h3 class="font-display pr-8 text-base font-semibold text-ink">Texte &amp; Copywriting</h3>
+            <p class="mt-2 text-sm text-body">Verkaufsstarke Texte für deine Seiten — du musst nichts selbst schreiben.</p>
+            <div class="mt-4 font-display text-lg font-bold text-sand-deep">+ 249 €</div>
+          </button>
+          <button type="button" class="opt opt-multi rounded-2xl border border-line bg-surface p-5" data-id="bilder" data-price="199" data-label="Bildmaterial &amp; Fotos" aria-pressed="false">
+            <span class="tick absolute right-4 top-4 grid h-6 w-6 place-items-center rounded-full border border-line"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+            <h3 class="font-display pr-8 text-base font-semibold text-ink">Bildmaterial &amp; Fotos</h3>
+            <p class="mt-2 text-sm text-body">Passende, lizenzfreie Bilder — sauber ausgewählt und eingebunden.</p>
+            <div class="mt-4 font-display text-lg font-bold text-sand-deep">+ 199 €</div>
+          </button>
+          <button type="button" class="opt opt-multi rounded-2xl border border-line bg-surface p-5" data-id="sprachen" data-price="349" data-label="Mehrsprachigkeit" aria-pressed="false">
+            <span class="tick absolute right-4 top-4 grid h-6 w-6 place-items-center rounded-full border border-line"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+            <h3 class="font-display pr-8 text-base font-semibold text-ink">Mehrsprachigkeit</h3>
+            <p class="mt-2 text-sm text-body">Deine Website zusätzlich in einer zweiten Sprache.</p>
+            <div class="mt-4 font-display text-lg font-bold text-sand-deep">+ 349 €</div>
+          </button>
+          <button type="button" class="opt opt-multi rounded-2xl border border-line bg-surface p-5" data-id="express" data-price="199" data-label="Express-Umsetzung" aria-pressed="false">
+            <span class="tick absolute right-4 top-4 grid h-6 w-6 place-items-center rounded-full border border-line"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+            <h3 class="font-display pr-8 text-base font-semibold text-ink">Express-Umsetzung</h3>
+            <p class="mt-2 text-sm text-body">Vorrangige Bearbeitung — deine Seite geht schneller online.</p>
+            <div class="mt-4 font-display text-lg font-bold text-sand-deep">+ 199 €</div>
+          </button>
+        </div>
+      </section>
+
+      <!-- STEP 3 — SEO -->
+      <section data-step="3" class="step" hidden>
+        <div class="text-center">
+          <h2 class="font-display h-tight text-2xl font-bold text-ink sm:text-3xl">Bessere Auffindbarkeit</h2>
+          <p class="mt-2 text-body">Damit dich deine Kunden bei Google auch wirklich finden.</p>
+        </div>
+        <div class="mt-8 grid gap-4 md:grid-cols-3" data-group="seo">
+          <button type="button" class="opt opt-multi rounded-2xl border border-line bg-surface p-5" data-id="onpage" data-price="399" data-label="SEO-Onpage-Optimierung" aria-pressed="false">
+            <span class="tick absolute right-4 top-4 grid h-6 w-6 place-items-center rounded-full border border-line"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+            <h3 class="font-display pr-8 text-base font-semibold text-ink">SEO-Onpage-Optimierung</h3>
+            <p class="mt-2 text-sm text-body">Saubere Überschriften, Meta-Angaben und Struktur — das Fundament fürs Ranking.</p>
+            <div class="mt-4 font-display text-lg font-bold text-sand-deep">+ 399 €</div>
+          </button>
+          <button type="button" class="opt opt-multi rounded-2xl border border-line bg-surface p-5" data-id="gbp" data-price="199" data-label="Google Business Profil" aria-pressed="false">
+            <span class="tick absolute right-4 top-4 grid h-6 w-6 place-items-center rounded-full border border-line"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+            <h3 class="font-display pr-8 text-base font-semibold text-ink">Google Business Profil</h3>
+            <p class="mt-2 text-sm text-body">Eingerichtetes Profil für die lokale Google-Suche und Google Maps.</p>
+            <div class="mt-4 font-display text-lg font-bold text-sand-deep">+ 199 €</div>
+          </button>
+          <button type="button" class="opt opt-multi rounded-2xl border border-line bg-surface p-5" data-id="seocare" data-price="99" data-monthly="1" data-label="Laufende SEO-Betreuung" aria-pressed="false">
+            <span class="tick absolute right-4 top-4 grid h-6 w-6 place-items-center rounded-full border border-line"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+            <h3 class="font-display pr-8 text-base font-semibold text-ink">Laufende SEO-Betreuung</h3>
+            <p class="mt-2 text-sm text-body">Monatliche Optimierung und Reporting. Jederzeit kündbar.</p>
+            <div class="mt-4 font-display text-lg font-bold text-sand-deep">+ 99 € <span class="text-sm font-medium text-body">/ Monat</span></div>
+          </button>
+        </div>
+      </section>
+
+      <!-- STEP 4 — DATEN -->
+      <section data-step="4" class="step" hidden>
+        <div class="text-center">
+          <h2 class="font-display h-tight text-2xl font-bold text-ink sm:text-3xl">Deine Daten</h2>
+          <p class="mt-2 text-body">Damit ich dir ein passendes Angebot schicken kann.</p>
+        </div>
+        <form id="dataForm" class="mx-auto mt-8 max-w-2xl rounded-3xl border border-line bg-surface p-6 shadow-[0_30px_60px_-40px_rgba(28,24,19,.3)] sm:p-8" novalidate>
+          <div class="grid gap-5 sm:grid-cols-3">
+            <div>
+              <label for="anrede" class="mb-2 block text-xs font-medium text-ink">Anrede</label>
+              <select id="anrede" class="input w-full rounded-xl border border-line bg-paper px-4 py-3 text-sm text-ink">
+                <option>Keine Angabe</option><option>Frau</option><option>Herr</option><option>Divers</option>
+              </select>
+            </div>
+            <div>
+              <label for="vorname" class="mb-2 block text-xs font-medium text-ink">Vorname *</label>
+              <input id="vorname" type="text" required placeholder="Max" class="input w-full rounded-xl border border-line bg-paper px-4 py-3 text-sm text-ink placeholder-body/50" />
+            </div>
+            <div>
+              <label for="nachname" class="mb-2 block text-xs font-medium text-ink">Nachname *</label>
+              <input id="nachname" type="text" required placeholder="Mustermann" class="input w-full rounded-xl border border-line bg-paper px-4 py-3 text-sm text-ink placeholder-body/50" />
+            </div>
+          </div>
+          <div class="mt-5 grid gap-5 sm:grid-cols-2">
+            <div>
+              <label for="firma" class="mb-2 block text-xs font-medium text-ink">Firma</label>
+              <input id="firma" type="text" placeholder="optional" class="input w-full rounded-xl border border-line bg-paper px-4 py-3 text-sm text-ink placeholder-body/50" />
+            </div>
+            <div>
+              <label for="kemail" class="mb-2 block text-xs font-medium text-ink">E-Mail *</label>
+              <input id="kemail" type="email" required placeholder="max@firma.de" class="input w-full rounded-xl border border-line bg-paper px-4 py-3 text-sm text-ink placeholder-body/50" />
+            </div>
+          </div>
+          <div class="mt-5 grid gap-5 sm:grid-cols-2">
+            <div>
+              <label for="telefon" class="mb-2 block text-xs font-medium text-ink">Telefon</label>
+              <input id="telefon" type="tel" placeholder="optional" class="input w-full rounded-xl border border-line bg-paper px-4 py-3 text-sm text-ink placeholder-body/50" />
+            </div>
+            <div>
+              <label for="land" class="mb-2 block text-xs font-medium text-ink">Land</label>
+              <select id="land" class="input w-full rounded-xl border border-line bg-paper px-4 py-3 text-sm text-ink">
+                <option>Deutschland</option><option>Österreich</option><option>Schweiz</option><option>Anderes</option>
+              </select>
+            </div>
+          </div>
+          <div class="mt-5">
+            <label for="bemerkung" class="mb-2 block text-xs font-medium text-ink">Erzähl mir kurz mehr zu deinem Projekt</label>
+            <textarea id="bemerkung" rows="4" placeholder="Ziel, Stil, Vorbilder, Wunschtermin …" class="input w-full resize-none rounded-xl border border-line bg-paper px-4 py-3 text-sm text-ink placeholder-body/50"></textarea>
+          </div>
+          <p id="dataErr" class="mt-4 hidden text-sm text-[#c0492b]">Bitte fülle Vorname, Nachname und eine gültige E-Mail aus.</p>
+        </form>
+      </section>
+
+      <!-- STEP 5 — ÜBERSICHT -->
+      <section data-step="5" class="step" hidden>
+        <div class="text-center">
+          <h2 class="font-display h-tight text-2xl font-bold text-ink sm:text-3xl">Übersicht &amp; Anfrage</h2>
+          <p class="mt-2 text-body">Prüfe deine Auswahl und sende die unverbindliche Anfrage ab.</p>
+        </div>
+        <div class="mx-auto mt-8 max-w-2xl overflow-hidden rounded-3xl border border-line bg-surface shadow-[0_30px_60px_-40px_rgba(28,24,19,.3)]">
+          <div id="summaryList" class="divide-y divide-line px-6 sm:px-8"></div>
+          <div id="summaryTotal" class="border-t border-line bg-panel px-6 py-5 sm:px-8"></div>
+          <div id="summaryContact" class="border-t border-line px-6 py-5 text-sm text-body sm:px-8"></div>
+        </div>
+        <p class="mx-auto mt-5 max-w-2xl text-center text-xs text-body">Unverbindlich &amp; kostenlos. Ich melde mich innerhalb von 24 Stunden mit einem konkreten Angebot. Preise sind Richtwerte und verstehen sich zzgl. USt.</p>
+      </section>
+
+      <!-- DONE -->
+      <section data-step="done" class="step" hidden>
+        <div class="mx-auto max-w-xl rounded-3xl border border-line bg-surface p-10 text-center shadow-[0_30px_60px_-40px_rgba(28,24,19,.3)]">
+          <div class="mx-auto grid h-14 w-14 place-items-center rounded-full bg-sand/15 text-sand-deep"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+          <h2 id="doneTitle" class="font-display h-tight mt-5 text-2xl font-bold text-ink sm:text-3xl">Danke — deine Anfrage ist da!</h2>
+          <p id="doneText" class="mx-auto mt-3 max-w-md text-body">Ich melde mich innerhalb von 24 Stunden mit einem konkreten Angebot bei dir.</p>
+          <a href="index.html" class="btn-ghost mt-7 inline-flex items-center gap-2 rounded-xl border border-line bg-paper px-6 py-3 text-sm font-semibold text-ink">Zurück zur Startseite</a>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- STICKY NAV BAR -->
+  <div id="navbar" class="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper/95 backdrop-blur-xl">
+    <div class="mx-auto flex max-w-shell items-center justify-between gap-4 px-5 py-4 sm:px-8">
+      <div>
+        <div class="text-[11px] uppercase tracking-wider text-body">Geschätzter Preis</div>
+        <div id="priceLabel" class="font-display text-xl font-bold text-ink">690 €</div>
+      </div>
+      <div class="flex items-center gap-3">
+        <button id="btnBack" type="button" class="btn-ghost hidden items-center gap-2 rounded-xl border border-line bg-surface px-5 py-3 text-sm font-semibold text-ink">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+          Zurück
+        </button>
+        <button id="btnNext" type="button" class="btn-primary inline-flex items-center gap-2 rounded-xl bg-sand px-6 py-3 text-sm font-semibold text-ink">
+          Weiter
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      const TOTAL_STEPS = 5;
+      const STEP_LABELS = ['Paket', 'Zusatz', 'SEO', 'Daten', 'Übersicht'];
+      let step = 1;
+
+      const fmt = (n) => n.toLocaleString('de-DE') + ' €';
+      const $ = (s, r) => (r || document).querySelector(s);
+      const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
+
+      // ---- Stepper UI ----
+      const stepper = $('#stepper');
+      STEP_LABELS.forEach((label, i) => {
+        const li = document.createElement('li');
+        li.className = 'flex flex-1 flex-col items-center gap-1.5';
+        li.innerHTML =
+          '<button type="button" data-goto="' + (i + 1) + '" class="dot grid h-8 w-8 place-items-center rounded-full border border-line bg-surface text-xs font-semibold text-body transition-colors">' + (i + 1) + '</button>' +
+          '<span class="hidden text-[11px] font-medium text-body sm:block">' + label + '</span>';
+        stepper.appendChild(li);
+      });
+
+      // ---- Selection (single = package) ----
+      $$('.opt-pkg').forEach((el) => {
+        el.addEventListener('click', () => {
+          $$('.opt-pkg').forEach((o) => { o.classList.remove('selected'); o.setAttribute('aria-pressed', 'false'); });
+          el.classList.add('selected'); el.setAttribute('aria-pressed', 'true');
+          recalc();
+        });
+      });
+      // ---- Selection (multi = addons / seo) ----
+      $$('.opt-multi').forEach((el) => {
+        el.addEventListener('click', () => {
+          const on = el.classList.toggle('selected');
+          el.setAttribute('aria-pressed', on ? 'true' : 'false');
+          recalc();
+        });
+      });
+
+      // ---- Preselect package from ?paket= ----
+      const param = new URLSearchParams(location.search).get('paket');
+      if (param) {
+        const pre = $('.opt-pkg[data-id="' + param + '"]');
+        if (pre) { pre.classList.add('selected'); pre.setAttribute('aria-pressed', 'true'); }
+      }
+
+      function selectedPkg() { return $('.opt-pkg.selected'); }
+
+      function totals() {
+        let once = 0, monthly = 0;
+        const pkg = selectedPkg();
+        const individuell = pkg && pkg.dataset.individuell === '1';
+        if (pkg && !individuell) once += Number(pkg.dataset.price) || 0;
+        $$('.opt-multi.selected').forEach((el) => {
+          const p = Number(el.dataset.price) || 0;
+          if (el.dataset.monthly === '1') monthly += p; else once += p;
+        });
+        return { once, monthly, individuell, hasPkg: !!pkg };
+      }
+
+      function priceText() {
+        const t = totals();
+        if (t.individuell) {
+          let s = 'Individuelles Angebot';
+          if (t.once > 0) s += ' · + ' + fmt(t.once);
+          if (t.monthly > 0) s += ' · ' + fmt(t.monthly) + '/Mon.';
+          return s;
+        }
+        let s = t.hasPkg ? 'ab ' + fmt(t.once) : '—';
+        if (t.monthly > 0) s += ' · ' + fmt(t.monthly) + '/Mon.';
+        return s;
+      }
+
+      function recalc() { $('#priceLabel').textContent = priceText(); }
+
+      // ---- Step navigation ----
+      const sections = {};
+      $$('section[data-step]').forEach((s) => { sections[s.dataset.step] = s; });
+      const btnNext = $('#btnNext'), btnBack = $('#btnBack');
+
+      function show(n) {
+        Object.values(sections).forEach((s) => { s.hidden = true; });
+        const key = String(n);
+        if (sections[key]) { sections[key].hidden = false; sections[key].classList.remove('step'); void sections[key].offsetWidth; sections[key].classList.add('step'); }
+        // stepper state
+        $$('.dot').forEach((d, i) => {
+          const idx = i + 1;
+          d.classList.toggle('!bg-sand', idx <= n);
+          d.classList.toggle('!border-sand', idx <= n);
+          d.classList.toggle('!text-ink', idx <= n);
+        });
+        $('#barFill').style.width = ((n - 1) / (TOTAL_STEPS - 1)) * 100 + '%';
+        btnBack.classList.toggle('hidden', n === 1);
+        btnBack.classList.toggle('inline-flex', n !== 1);
+        btnNext.innerHTML = (n === TOTAL_STEPS)
+          ? 'Anfrage senden <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>'
+          : 'Weiter <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      function validEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+      function validateStep(n) {
+        if (n === 1 && !selectedPkg()) {
+          flash('Bitte wähle zuerst ein Paket aus.');
+          return false;
+        }
+        if (n === 4) {
+          const v = $('#vorname'), na = $('#nachname'), em = $('#kemail');
+          let ok = true;
+          [v, na].forEach((f) => { const bad = !f.value.trim(); f.classList.toggle('err', bad); if (bad) ok = false; });
+          const badEmail = !validEmail(em.value.trim()); em.classList.toggle('err', badEmail); if (badEmail) ok = false;
+          $('#dataErr').classList.toggle('hidden', ok);
+          return ok;
+        }
+        return true;
+      }
+
+      let flashTimer;
+      function flash(msg) {
+        let el = $('#flash');
+        if (!el) {
+          el = document.createElement('div');
+          el.id = 'flash';
+          el.className = 'fixed left-1/2 top-20 z-50 -translate-x-1/2 rounded-xl border border-sand bg-surface px-5 py-3 text-sm font-medium text-ink shadow-lg';
+          document.body.appendChild(el);
+        }
+        el.textContent = msg;
+        el.style.opacity = '1';
+        clearTimeout(flashTimer);
+        flashTimer = setTimeout(() => { el.style.opacity = '0'; }, 2200);
+        el.style.transition = 'opacity .4s';
+      }
+
+      function buildSummary() {
+        const rows = [];
+        const pkg = selectedPkg();
+        if (pkg) {
+          rows.push({ label: pkg.dataset.label, price: pkg.dataset.individuell === '1' ? 'auf Anfrage' : 'ab ' + fmt(Number(pkg.dataset.price)) });
+        }
+        $$('.opt-multi.selected').forEach((el) => {
+          const monthly = el.dataset.monthly === '1';
+          rows.push({ label: el.dataset.label, price: '+ ' + fmt(Number(el.dataset.price)) + (monthly ? ' / Monat' : '') });
+        });
+        $('#summaryList').innerHTML = rows.map((r) =>
+          '<div class="flex items-center justify-between gap-4 py-3.5 text-sm"><span class="text-ink">' + r.label + '</span><span class="font-display font-semibold text-ink">' + r.price + '</span></div>'
+        ).join('') || '<div class="py-4 text-sm text-body">Noch nichts ausgewählt.</div>';
+
+        const t = totals();
+        let totalHtml = '';
+        if (t.individuell) {
+          totalHtml = '<div class="flex items-center justify-between"><span class="text-sm font-medium text-body">Gesamt</span><span class="font-display text-xl font-bold text-ink">Individuelles Angebot</span></div>';
+          if (t.once > 0) totalHtml += '<div class="mt-1 text-right text-xs text-body">zzgl. gewählte Zusatzleistungen ' + fmt(t.once) + '</div>';
+        } else {
+          totalHtml = '<div class="flex items-center justify-between"><span class="text-sm font-medium text-body">Gesamt (einmalig)</span><span class="font-display text-xl font-bold text-ink">ab ' + fmt(t.once) + '</span></div>';
+        }
+        if (t.monthly > 0) totalHtml += '<div class="mt-1 flex items-center justify-between"><span class="text-xs text-body">Laufend</span><span class="font-display text-sm font-semibold text-sand-deep">' + fmt(t.monthly) + ' / Monat</span></div>';
+        $('#summaryTotal').innerHTML = totalHtml;
+
+        const name = ($('#vorname').value.trim() + ' ' + $('#nachname').value.trim()).trim();
+        const parts = [];
+        if (name) parts.push('<strong class="font-medium text-ink">' + name + '</strong>');
+        if ($('#firma').value.trim()) parts.push($('#firma').value.trim());
+        if ($('#kemail').value.trim()) parts.push($('#kemail').value.trim());
+        if ($('#telefon').value.trim()) parts.push($('#telefon').value.trim());
+        $('#summaryContact').innerHTML = parts.length ? 'Kontakt: ' + parts.join(' · ') : '';
+      }
+
+      btnNext.addEventListener('click', () => {
+        if (!validateStep(step)) return;
+        if (step === TOTAL_STEPS) { submit(); return; }
+        step++;
+        if (step === 5) buildSummary();
+        show(step);
+      });
+      btnBack.addEventListener('click', () => { if (step > 1) { step--; show(step); } });
+      $$('.dot').forEach((d) => d.addEventListener('click', () => {
+        const target = Number(d.dataset.goto);
+        if (target <= step) { step = target; show(step); }      // only jump back to completed steps
+      }));
+
+      function submit() {
+        const name = $('#vorname').value.trim();
+        const navbar = $('#navbar');
+        Object.values(sections).forEach((s) => { s.hidden = true; });
+        sections['done'].hidden = false;
+        $('#doneTitle').textContent = name ? ('Danke, ' + name + ' — deine Anfrage ist da!') : 'Danke — deine Anfrage ist da!';
+        const t = totals();
+        let line = t.individuell ? 'Wir erstellen dir ein individuelles Angebot' : ('Richtpreis deiner Auswahl: ab ' + fmt(t.once));
+        if (t.monthly > 0) line += ' · ' + fmt(t.monthly) + ' / Monat';
+        $('#doneText').textContent = line + '. Ich melde mich innerhalb von 24 Stunden bei dir.';
+        navbar.style.display = 'none';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      // init
+      recalc();
+      show(1);
+    })();
+  </script>
+</body>
+</html>

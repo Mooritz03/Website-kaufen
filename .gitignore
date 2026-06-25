@@ -1,0 +1,14 @@
+# Local Claude config
+.claude/
+
+# Scratch screenshots (auto-generated)
+temporary screenshots/
+
+# Large third-party reference image (not part of the site)
+www.arteriorshome.com_.png
+
+# Temp helper scripts
+_*.mjs
+
+# Node
+node_modules/
