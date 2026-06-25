@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="de" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Was ist alles möglich? — SITELAB</title>
+  <meta name="description" content="Scroll und finde es heraus: scroll-getriebene Animationen, 3D, interaktive Tools — was eine handgebaute Website kann, die kein Baukasten je hinbekommt." />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            paper: '#f5f2ec', panel: '#ece6da', surface: '#ffffff',
+            ink: '#1c1813', body: '#6a655c', line: '#e3ddd2',
+            night: '#161310', cream: '#f6f3ee', muted: '#a8a39a',
+            sand: '#FA9F42', 'sand-deep': '#C26E16',
+          },
+          fontFamily: {
+            display: ['Space Grotesk', 'ui-sans-serif', 'sans-serif'],
+            body: ['Inter', 'ui-sans-serif', 'sans-serif'],
+          },
+          maxWidth: { shell: '1200px' },
+        },
+      },
+    };
+  </script>
+  <style>
+    :root { --ease-spring: cubic-bezier(0.16, 1, 0.3, 1); --ease-pop: cubic-bezier(0.34, 1.4, 0.64, 1); }
+    html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    body { font-family: 'Inter', sans-serif; color: #6a655c; background: #161310; line-height: 1.65; overflow-x: hidden; }
+    ::selection { background: #FA9F42; color: #1c1813; }
+    .font-display { font-family: 'Space Grotesk', sans-serif; }
+    .h-tight { letter-spacing: -0.035em; }
+    .eyebrow { font-size: 12px; letter-spacing: 0.22em; text-transform: uppercase; font-weight: 600; }
+    .gradient-text { background: linear-gradient(100deg, #C26E16 0%, #FA9F42 95%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+    .grain { position: absolute; inset: 0; pointer-events: none; opacity: .045; mix-blend-mode: overlay;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+
+    a:focus-visible, button:focus-visible {
+      outline: 2px solid #FA9F42; outline-offset: 3px; border-radius: 4px;
+    }
+
+    /* Buttons */
+    .btn-primary { transition: transform .35s var(--ease-pop), box-shadow .35s var(--ease-spring); box-shadow: 0 10px 34px -10px rgba(250,159,66,.6); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 18px 46px -10px rgba(250,159,66,.75); }
+    .btn-primary:active { transform: translateY(0) scale(.985); }
+    .btn-ghost { transition: transform .35s var(--ease-pop), border-color .35s, background-color .35s, color .35s; }
+    .btn-ghost:hover { transform: translateY(-2px); }
+    .btn-ghost:active { transform: translateY(0) scale(.985); }
+
+    /* Top scroll-progress bar */
+    #progress { position: fixed; left: 0; top: 0; height: 3px; width: 100%; z-index: 60;
+      transform: scaleX(0); transform-origin: 0 50%;
+      background: linear-gradient(90deg, #C26E16, #FA9F42); box-shadow: 0 0 18px rgba(250,159,66,.7); }
+
+    /* ===== Scroll stage scaffold ===== */
+    .stage { position: relative; }
+    .pin { position: sticky; top: 0; height: 100vh; overflow: hidden; display: grid; place-items: center; }
+    .stage-num { font-variant-numeric: tabular-nums; }
+
+    /* HERO entrance */
+    @keyframes rise { from { opacity: 0; transform: translateY(26px); } to { opacity: 1; transform: none; } }
+    .hero-in { opacity: 0; animation: rise .9s var(--ease-spring) forwards; }
+    @keyframes floaty { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    @keyframes huebreathe { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(3%,-2%) scale(1.08); } }
+    .hero-glow-a { background: radial-gradient(42rem 30rem at 70% 8%, rgba(250,159,66,.28), transparent 60%); animation: huebreathe 14s ease-in-out infinite; }
+    .hero-glow-b { background: radial-gradient(38rem 28rem at 12% 90%, rgba(194,110,22,.22), transparent 62%); animation: huebreathe 18s ease-in-out infinite reverse; }
+    @keyframes bob { 0%,100% { transform: translateY(0); opacity:.9 } 50% { transform: translateY(8px); opacity:.4 } }
+    .scrollcue { animation: bob 1.8s ease-in-out infinite; }
+
+    /* ===== Interactive 3D constellation (follows the mouse) ===== */
+    .scene3d { perspective: 1100px; perspective-origin: 50% 45%; }
+    .rig { position: relative; width: min(440px, 80vw); aspect-ratio: 1; margin-inline: auto; transform-style: preserve-3d; will-change: transform; }
+    .layer { position: absolute; left: 50%; top: 50%; transform-style: preserve-3d; pointer-events: none; }
+    .slab { width: min(220px, 52vw); aspect-ratio: 4 / 5; border-radius: 28px; position: relative; display: grid; place-content: center; gap: 16px; text-align: center;
+      background: linear-gradient(155deg, rgba(42,34,27,.96), rgba(20,17,14,.98));
+      border: 1px solid rgba(250,159,66,.35);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.09), 0 50px 90px -34px rgba(0,0,0,.85); }
+    .slab-glow { position: absolute; inset: 0; border-radius: 28px; pointer-events: none;
+      background: radial-gradient(65% 55% at 50% 0%, rgba(250,159,66,.4), transparent 72%); }
+    .logo3d { position: relative; height: 56px; width: 56px; margin-inline: auto; }
+    .logo3d span { position: absolute; height: 40px; width: 40px; border-radius: 13px; }
+    .chip3d { display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; border-radius: 14px; padding: 9px 13px; font-size: 12px; font-weight: 600;
+      color: #f6f3ee; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.15); backdrop-filter: blur(6px);
+      box-shadow: 0 24px 44px -24px rgba(0,0,0,.85); }
+    .orb3d { border-radius: 9999px; }
+    .chip-layer { display: none; }
+    @media (min-width: 640px) { .chip-layer { display: block; } }
+    .mouse-hint { display: none; }
+    @media (hover: hover) and (pointer: fine) { .mouse-hint { display: inline-flex; } }
+    /* parallax orbs in hero */
+    .par-orb { position: absolute; border-radius: 9999px; pointer-events: none; will-change: transform; filter: blur(1px); }
+
+    /* ===== Stage 05 — animated pricing EXAMPLE ===== */
+    .ex-reveal { opacity: 0; transform: translateY(26px); transition: opacity .7s var(--ease-spring), transform .7s var(--ease-spring); }
+    .ex-reveal.in { opacity: 1; transform: none; }
+    .ex-note { box-shadow: 0 0 0 1px rgba(250,159,66,.35) inset; }
+    /* segmented billing toggle */
+    .seg { position: relative; display: inline-flex; padding: 4px; border-radius: 9999px; border: 1px solid var(--line, #e3ddd2); background: #fff; }
+    .seg-ind { position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px); border-radius: 9999px; background: #1c1813; transition: transform .45s var(--ease-spring); }
+    .seg.year .seg-ind { transform: translateX(100%); }
+    .seg button { position: relative; z-index: 1; padding: .5rem 1.15rem; font-size: .85rem; font-weight: 600; color: #6a655c; transition: color .3s; white-space: nowrap; }
+    .seg button[aria-pressed="true"] { color: #fff; }
+    /* cards */
+    .price-card { transition: transform .55s var(--ease-spring), box-shadow .55s var(--ease-spring), border-color .45s; }
+    .price-card:hover { transform: translateY(-7px); box-shadow: 0 44px 84px -42px rgba(28,24,19,.4); border-color: rgba(250,159,66,.55); }
+    .popular { position: relative; }
+    .popular::before { content: ''; position: absolute; inset: -1.5px; border-radius: inherit; padding: 1.5px; pointer-events: none;
+      background: linear-gradient(130deg, #FA9F42, #C26E16 35%, #FA9F42 70%, #C26E16); background-size: 220% 220%;
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+      animation: borderflow 4.5s linear infinite; }
+    @keyframes borderflow { to { background-position: 220% 0; } }
+    .ex-demo-tag { position: absolute; top: 14px; right: 14px; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; font-weight: 700;
+      color: #C26E16; background: rgba(250,159,66,.16); border: 1px solid rgba(250,159,66,.4); border-radius: 9999px; padding: 3px 9px; }
+    .bill-note { max-height: 0; opacity: 0; overflow: hidden; transition: max-height .4s var(--ease-spring), opacity .4s, margin .4s; }
+    .year .bill-note { max-height: 30px; opacity: 1; }
+    /* shimmer sweep on buttons */
+    .shine { position: relative; overflow: hidden; }
+    .shine::after { content: ''; position: absolute; top: 0; left: -60%; height: 100%; width: 40%; transform: skewX(-20deg);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent); transition: transform .7s var(--ease-spring); }
+    .shine:hover::after { transform: translateX(440%) skewX(-20deg); }
+    .feat-ic { transition: transform .4s var(--ease-spring); }
+    .price-card:hover .feat-ic { transform: scale(1.12); }
+
+    /* ===== STAGE 01 — ZOOM ===== */
+    .zoom-head { transform: scale(calc(1 + .18 * var(--p))); opacity: calc(1 - 1.7 * var(--p)); }
+    .zoom-frame {
+      width: min(1240px, 124vw); aspect-ratio: 16 / 10;
+      transform: scale(calc(0.30 + 0.70 * var(--p)));
+      border-radius: calc(34px - 22px * var(--p));
+      box-shadow: 0 60px 120px -40px rgba(0,0,0,.7);
+      opacity: calc(.18 + .82 * min(1, var(--p) * 3));
+    }
+    .zoom-frame .glass-ui { opacity: calc(min(1, (var(--p) - .35) * 3)); transform: translateY(calc(26px * (1 - min(1, var(--p) * 1.4)))); }
+    .zoom-caption { opacity: calc(1 - 2.4 * var(--p)); }
+
+    /* ===== STAGE 02 — HORIZONTAL RAIL ===== */
+    .rail-track { display: flex; gap: clamp(16px, 3vw, 36px); will-change: transform; padding-inline: 7vw; align-items: stretch; }
+    .rail-card { flex: 0 0 auto; width: min(420px, 78vw); }
+    .rail-progress { transform-origin: 0 50%; transform: scaleX(var(--p)); }
+
+    /* ===== STAGE 03 — 3D ROTATE ===== */
+    .scene { perspective: 1400px; }
+    .prism { --w: clamp(220px, 34vmin, 380px); position: relative; width: var(--w); height: calc(var(--w) * 1.18); transform-style: preserve-3d;
+      transform: rotateX(-9deg) rotateY(calc(var(--p) * -360deg)); }
+    .face { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; gap: 10px;
+      border: 1px solid rgba(250,159,66,.32); border-radius: 22px; backface-visibility: hidden;
+      background: linear-gradient(160deg, rgba(38,32,26,.94), rgba(22,19,16,.96));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 30px 60px -30px rgba(0,0,0,.8); }
+    .face.f1 { transform: rotateY(0deg)   translateZ(calc(var(--w) / 2)); }
+    .face.f2 { transform: rotateY(90deg)  translateZ(calc(var(--w) / 2)); }
+    .face.f3 { transform: rotateY(180deg) translateZ(calc(var(--w) / 2)); }
+    .face.f4 { transform: rotateY(270deg) translateZ(calc(var(--w) / 2)); }
+    .prism-shadow { transform: scale(calc(0.7 + .3 * (1 - var(--p)))); opacity: calc(.4 + .25 * var(--p)); }
+
+    /* ===== STAGE 04 — WORD REVEAL ===== */
+    .rw { color: rgba(246,243,238,.14); transition: color .5s var(--ease-spring), text-shadow .5s; }
+    .rw.lit { color: #f6f3ee; }
+    .rw.hot { color: #FA9F42; text-shadow: 0 0 30px rgba(250,159,66,.45); }
+
+    /* reduced motion: flatten everything to a readable static state */
+    @media (prefers-reduced-motion: reduce) {
+      * { scroll-behavior: auto !important; }
+      .stage { height: auto !important; }
+      .pin { position: static; height: auto; padding: 12vh 0; }
+      .hero-in { opacity: 1; animation: none; }
+      .hero-glow-a, .hero-glow-b, .scrollcue { animation: none; }
+      .rig { transform: rotateX(-8deg) rotateY(-18deg); }
+      .par-orb { display: none; }
+      .ex-reveal { opacity: 1; transform: none; }
+      .popular::before, .shine::after { animation: none; }
+      .zoom-head { transform: none; opacity: .12; }
+      .zoom-frame { transform: none; width: min(960px, 92vw); opacity: 1; border-radius: 18px; }
+      .zoom-frame .glass-ui { opacity: 1; transform: none; }
+      .zoom-caption { opacity: 1; }
+      .rail-track { flex-wrap: wrap; transform: none !important; justify-content: center; }
+      .prism { transform: rotateX(-9deg) rotateY(-32deg); }
+      .rw { color: #f6f3ee; }
+    }
+  </style>
+</head>
+<body class="font-body text-cream">
+
+  <div id="progress" aria-hidden="true"></div>
+
+  <!-- ============ HEADER ============ -->
+  <header class="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-night/70 backdrop-blur-xl">
+    <div class="mx-auto flex h-16 max-w-shell items-center justify-between px-5 sm:px-8">
+      <a href="index.html" class="group flex items-center gap-2.5" aria-label="SITELAB Startseite">
+        <span class="relative block h-7 w-7" aria-hidden="true">
+          <span class="absolute left-0 top-1.5 h-5 w-5 rounded-[6px] bg-sand transition-transform duration-500 group-hover:-translate-x-0.5 group-hover:translate-y-0.5"></span>
+          <span class="absolute left-1.5 top-0 h-5 w-5 rounded-[6px] bg-sand-deep transition-transform duration-500 group-hover:translate-x-0.5"></span>
+        </span>
+        <span class="font-display text-xl font-bold tracking-tight text-cream">SITE<span class="text-sand">LAB</span></span>
+      </a>
+
+      <div class="flex items-center gap-3 sm:gap-5">
+        <a href="index.html" class="hidden items-center gap-1.5 text-sm font-medium text-muted transition-colors hover:text-cream sm:inline-flex">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+          Zurück
+        </a>
+        <a href="konfigurator.html" class="btn-primary inline-flex items-center gap-2 rounded-xl bg-sand px-4 py-2.5 text-sm font-semibold text-ink">
+          Projekt anfragen
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ============ HERO ============ -->
+    <section class="hero3d relative flex min-h-screen items-center overflow-hidden">
+      <div class="pointer-events-none absolute inset-0 hero-glow-a" aria-hidden="true"></div>
+      <div class="pointer-events-none absolute inset-0 hero-glow-b" aria-hidden="true"></div>
+      <div class="grain" aria-hidden="true"></div>
+      <!-- parallax accent orbs -->
+      <div class="par-orb hidden sm:block" data-par="0.14" style="left:8%;top:24%;height:14px;width:14px;background:rgba(250,159,66,.9);box-shadow:0 0 24px rgba(250,159,66,.8)" aria-hidden="true"></div>
+      <div class="par-orb hidden sm:block" data-par="0.09" style="right:12%;top:18%;height:10px;width:10px;background:rgba(246,243,238,.55)" aria-hidden="true"></div>
+      <div class="par-orb hidden sm:block" data-par="0.18" style="left:18%;bottom:22%;height:8px;width:8px;background:rgba(194,110,22,.9);box-shadow:0 0 18px rgba(194,110,22,.7)" aria-hidden="true"></div>
+
+      <div class="relative mx-auto grid w-full max-w-shell items-center gap-12 px-5 py-28 sm:px-8 lg:grid-cols-2 lg:gap-8">
+        <!-- LEFT: text -->
+        <div class="text-center lg:text-left" data-par="0.02">
+          <div class="hero-in inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/5 px-4 py-1.5 text-xs font-medium text-muted" style="animation-delay:.05s">
+            <span class="relative flex h-2 w-2"><span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-sand opacity-75"></span><span class="relative inline-flex h-2 w-2 rounded-full bg-sand"></span></span>
+            SITELAB · Möglichkeiten
+          </div>
+
+          <h1 class="hero-in font-display h-tight mt-7 text-[14vw] font-bold leading-[0.95] text-cream sm:text-7xl lg:text-[5.2rem]" style="animation-delay:.14s">
+            Was ist alles<br /><span class="gradient-text">möglich?</span>
+          </h1>
+
+          <p class="hero-in mx-auto mt-7 max-w-md text-lg leading-relaxed text-muted lg:mx-0" style="animation-delay:.24s">
+            Scroll weiter — und sieh, was eine von Hand gebaute Website kann, die kein Baukasten je hinbekommt.
+          </p>
+
+          <div class="mouse-hint hero-in mt-8 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-medium text-muted" style="animation-delay:.34s">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FA9F42" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="3" width="12" height="18" rx="6"/><path d="M12 7v3"/></svg>
+            Beweg die Maus über das Objekt
+          </div>
+        </div>
+
+        <!-- RIGHT: interactive 3D constellation -->
+        <div class="scene3d hero-in" style="animation-delay:.3s" data-par="0.05">
+          <div class="rig" id="rig" aria-hidden="true">
+            <!-- back glow -->
+            <div class="layer" style="transform:translate(-50%,-50%) translate3d(20px,-10px,-160px)">
+              <div class="orb3d" style="height:min(280px,60vw);width:min(280px,60vw);background:radial-gradient(circle,rgba(250,159,66,.32),transparent 68%);filter:blur(14px)"></div>
+            </div>
+            <!-- deep accent orbs -->
+            <div class="layer" style="transform:translate(-50%,-50%) translate3d(-150px,140px,-60px)"><div class="orb3d" style="height:16px;width:16px;background:rgba(250,159,66,.85);box-shadow:0 0 22px rgba(250,159,66,.8)"></div></div>
+            <div class="layer" style="transform:translate(-50%,-50%) translate3d(170px,-150px,-40px)"><div class="orb3d" style="height:10px;width:10px;background:rgba(246,243,238,.6)"></div></div>
+
+            <!-- central slab -->
+            <div class="layer" style="transform:translate(-50%,-50%) translate3d(0,0,10px)">
+              <div class="slab">
+                <div class="slab-glow"></div>
+                <span class="logo3d">
+                  <span style="left:2px;top:9px;background:#FA9F42"></span>
+                  <span style="left:14px;top:0;background:#C26E16"></span>
+                </span>
+                <div class="font-display text-3xl font-bold tracking-tight text-cream">SITE<span class="text-sand">LAB</span></div>
+                <div class="text-[11px] uppercase tracking-[0.2em] text-muted">von Hand gebaut</div>
+              </div>
+            </div>
+
+            <!-- floating capability chips (desktop) -->
+            <div class="layer chip-layer" style="transform:translate(-50%,-50%) translate3d(-168px,-128px,80px)">
+              <span class="chip3d"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FA9F42" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-3 7h7l-8 13 3-9H5l8-11z"/></svg>Animation</span>
+            </div>
+            <div class="layer chip-layer" style="transform:translate(-50%,-50%) translate3d(176px,-86px,56px)">
+              <span class="chip3d"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FA9F42" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/></svg>3D &amp; Tiefe</span>
+            </div>
+            <div class="layer chip-layer" style="transform:translate(-50%,-50%) translate3d(-182px,120px,96px)">
+              <span class="chip3d"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FA9F42" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Tools</span>
+            </div>
+            <div class="layer chip-layer" style="transform:translate(-50%,-50%) translate3d(158px,134px,44px)">
+              <span class="chip3d"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FA9F42" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg>Shop</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- scroll cue -->
+      <div class="hero-in absolute bottom-7 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 text-xs uppercase tracking-[0.25em] text-muted" style="animation-delay:.44s">
+        Scroll
+        <span class="scrollcue inline-flex" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#FA9F42" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M19 12l-7 7-7-7"/></svg>
+        </span>
+      </div>
+    </section>
+
+    <!-- ============ STAGE 01 — SCROLL ZOOM ============ -->
+    <section class="stage bg-paper text-ink" style="height: 320vh" data-stage="zoom">
+      <div class="pin">
+        <!-- background headline that fades as the frame grows -->
+        <div class="zoom-head pointer-events-none absolute inset-0 grid place-content-center px-6 text-center">
+          <span class="eyebrow text-sand-deep">01 — Tiefe</span>
+          <h2 class="font-display h-tight mt-4 text-5xl font-bold text-ink sm:text-7xl">Aus klein<br />wird groß.</h2>
+        </div>
+
+        <!-- the growing "website" mockup -->
+        <div class="zoom-frame relative overflow-hidden border border-line bg-night">
+          <!-- mock browser chrome -->
+          <div class="flex items-center gap-2 border-b border-white/10 bg-white/5 px-4 py-2.5">
+            <span class="h-2.5 w-2.5 rounded-full bg-[#ff5f57]"></span>
+            <span class="h-2.5 w-2.5 rounded-full bg-[#febc2e]"></span>
+            <span class="h-2.5 w-2.5 rounded-full bg-[#28c840]"></span>
+            <span class="ml-3 hidden rounded-md bg-white/10 px-3 py-0.5 text-[10px] text-muted sm:inline">deine-marke.de</span>
+          </div>
+          <!-- mock site content -->
+          <div class="relative grid h-[calc(100%-41px)] grid-cols-1 items-center gap-6 px-[6%] sm:grid-cols-2">
+            <div class="pointer-events-none absolute inset-0" style="background:radial-gradient(30rem 18rem at 80% 0%, rgba(250,159,66,.25), transparent 60%)"></div>
+            <div class="glass-ui relative">
+              <span class="eyebrow text-sand">Deine Marke</span>
+              <h3 class="font-display h-tight mt-3 text-2xl font-bold leading-tight text-cream sm:text-4xl">Eine Seite,<br />die lebt.</h3>
+              <p class="mt-3 max-w-xs text-sm text-muted">Bewegung, Tiefe und Charakter — direkt im Browser, ganz ohne Vorlage.</p>
+              <span class="mt-5 inline-flex items-center gap-2 rounded-lg bg-sand px-4 py-2 text-xs font-semibold text-ink">Loslegen →</span>
+            </div>
+            <div class="glass-ui relative hidden gap-3 sm:grid">
+              <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div class="font-display text-2xl font-bold text-cream">+128 %</div>
+                <div class="text-[11px] text-muted">mehr Verweildauer</div>
+              </div>
+              <div class="rounded-xl border border-white/10 bg-white/5 p-4">
+                <div class="font-display text-2xl font-bold text-sand">0,8 s</div>
+                <div class="text-[11px] text-muted">bis alles geladen ist</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="zoom-caption absolute bottom-7 left-1/2 -translate-x-1/2 text-center text-xs uppercase tracking-[0.25em] text-body">
+          Scroll · ein Element, das mitwächst
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ STAGE 02 — HORIZONTAL RAIL ============ -->
+    <section class="stage bg-night" style="height: 360vh" data-stage="rail">
+      <div class="pin">
+        <div class="grain" aria-hidden="true"></div>
+        <div class="absolute left-0 right-0 top-0 px-5 pt-24 sm:px-8">
+          <div class="mx-auto flex max-w-shell items-end justify-between gap-6">
+            <div>
+              <span class="eyebrow text-sand">02 — Bewegung</span>
+              <h2 class="font-display h-tight mt-3 text-4xl font-bold text-cream sm:text-5xl">Eine Geste,<br />jede Richtung.</h2>
+            </div>
+            <p class="hidden max-w-xs text-sm text-muted sm:block">Du scrollst nach unten — die Seite bewegt sich zur Seite. Genau so steuert man Aufmerksamkeit.</p>
+          </div>
+          <div class="mx-auto mt-7 h-px max-w-shell bg-white/10">
+            <div class="rail-progress h-px bg-sand"></div>
+          </div>
+        </div>
+
+        <!-- horizontally moving track -->
+        <div class="rail-track w-max">
+          <article class="rail-card flex flex-col justify-between rounded-3xl border border-white/12 bg-white/[0.04] p-8" style="min-height:clamp(320px,52vh,460px)">
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-sand/15 text-sand"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-3 7h7l-8 13 3-9H5l8-11z"/></svg></div>
+            <div>
+              <div class="font-display text-sm text-sand">Scroll-Storys</div>
+              <h3 class="font-display h-tight mt-1 text-2xl font-bold text-cream">Animationen, die beim Scrollen erzählen</h3>
+              <p class="mt-3 text-sm text-muted">Inhalte tauchen auf, wachsen, verschieben sich — präzise im Takt deiner Bewegung.</p>
+            </div>
+          </article>
+
+          <article class="rail-card flex flex-col justify-between rounded-3xl border border-white/12 bg-white/[0.04] p-8" style="min-height:clamp(320px,52vh,460px)">
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-sand/15 text-sand"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5M2 12l10 5 10-5"/></svg></div>
+            <div>
+              <div class="font-display text-sm text-sand">3D &amp; Tiefe</div>
+              <h3 class="font-display h-tight mt-1 text-2xl font-bold text-cream">Räume, die sich drehen lassen</h3>
+              <p class="mt-3 text-sm text-muted">Echte Perspektive im Browser — Objekte mit Vorder- und Rückseite, die auf dich reagieren.</p>
+            </div>
+          </article>
+
+          <article class="rail-card flex flex-col justify-between rounded-3xl border border-white/12 bg-white/[0.04] p-8" style="min-height:clamp(320px,52vh,460px)">
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-sand/15 text-sand"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+            <div>
+              <div class="font-display text-sm text-sand">Interaktive Tools</div>
+              <h3 class="font-display h-tight mt-1 text-2xl font-bold text-cream">Rechner, Buchung, Konfigurator</h3>
+              <p class="mt-3 text-sm text-muted">Funktionen, die mitdenken — von der Terminbuchung bis zum Preisrechner, genau für dich gebaut.</p>
+            </div>
+          </article>
+
+          <article class="rail-card flex flex-col justify-between rounded-3xl border border-white/12 bg-white/[0.04] p-8" style="min-height:clamp(320px,52vh,460px)">
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-sand/15 text-sand"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.7 13.4a2 2 0 0 0 2 1.6h9.7a2 2 0 0 0 2-1.6L23 6H6"/></svg></div>
+            <div>
+              <div class="font-display text-sm text-sand">Shop &amp; Bezahlung</div>
+              <h3 class="font-display h-tight mt-1 text-2xl font-bold text-cream">Verkaufen, direkt von deiner Seite</h3>
+              <p class="mt-3 text-sm text-muted">Warenkorb, sichere Bezahlung und Produktpflege — sauber integriert, kein Fremd-Baukasten.</p>
+            </div>
+          </article>
+
+          <article class="rail-card flex flex-col justify-center rounded-3xl border border-sand/40 bg-gradient-to-br from-sand/15 to-transparent p-8 text-center" style="min-height:clamp(320px,52vh,460px)">
+            <h3 class="font-display h-tight text-3xl font-bold text-cream">Und noch viel mehr.</h3>
+            <p class="mt-3 text-sm text-muted">Wenn du es dir vorstellen kannst, lässt es sich bauen.</p>
+            <a href="konfigurator.html" class="btn-primary mx-auto mt-6 inline-flex items-center gap-2 rounded-xl bg-sand px-5 py-3 text-sm font-semibold text-ink">Idee anfragen →</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ STAGE 03 — 3D ROTATE ============ -->
+    <section class="stage bg-paper text-ink" style="height: 320vh" data-stage="rotate">
+      <div class="pin">
+        <div class="pointer-events-none absolute inset-0" style="background:radial-gradient(40rem 30rem at 50% 30%, rgba(250,159,66,.12), transparent 65%)"></div>
+
+        <div class="absolute left-0 right-0 top-0 px-5 pt-24 text-center sm:px-8">
+          <span class="eyebrow text-sand-deep">03 — Dimension</span>
+          <h2 class="font-display h-tight mt-3 text-4xl font-bold text-ink sm:text-6xl">Und alles dreht sich.</h2>
+          <p class="mx-auto mt-4 max-w-md text-body">Scroll — und das Objekt rotiert. Vier Seiten, eine Bewegung, von dir gesteuert.</p>
+        </div>
+
+        <div class="scene relative grid place-items-center" style="margin-top:9vh">
+          <div class="prism-shadow pointer-events-none absolute bottom-[-7vh] h-8 w-[34vmin] max-w-[380px] rounded-full bg-ink/30 blur-2xl"></div>
+          <div class="prism">
+            <div class="face f1">
+              <span class="font-display text-5xl font-bold text-sand">01</span>
+              <span class="font-display text-lg font-semibold text-cream">Design</span>
+              <span class="px-6 text-xs text-muted">Unverwechselbar statt Vorlage</span>
+            </div>
+            <div class="face f2">
+              <span class="font-display text-5xl font-bold text-sand">02</span>
+              <span class="font-display text-lg font-semibold text-cream">Bewegung</span>
+              <span class="px-6 text-xs text-muted">Animation mit Sinn</span>
+            </div>
+            <div class="face f3">
+              <span class="font-display text-5xl font-bold text-sand">03</span>
+              <span class="font-display text-lg font-semibold text-cream">Funktion</span>
+              <span class="px-6 text-xs text-muted">Tools, die wirklich arbeiten</span>
+            </div>
+            <div class="face f4">
+              <span class="font-display text-5xl font-bold text-sand">04</span>
+              <span class="font-display text-lg font-semibold text-cream">Tempo</span>
+              <span class="px-6 text-xs text-muted">Unter einer Sekunde geladen</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ STAGE 04 — WORD REVEAL ============ -->
+    <section class="stage bg-night" style="height: 300vh" data-stage="reveal">
+      <div class="pin px-6">
+        <div class="grain" aria-hidden="true"></div>
+        <p class="font-display h-tight mx-auto max-w-5xl text-center text-3xl font-bold leading-[1.18] sm:text-5xl lg:text-6xl" aria-label="Deine Website soll nicht nur existieren. Sie soll im Kopf bleiben — und sich anfühlen wie nichts anderes.">
+          <span class="rw">Deine</span> <span class="rw">Website</span> <span class="rw">soll</span> <span class="rw">nicht</span> <span class="rw">nur</span> <span class="rw">existieren.</span>
+          <span class="rw">Sie</span> <span class="rw">soll</span> <span class="rw hot">im&nbsp;Kopf&nbsp;bleiben</span> <span class="rw">—</span> <span class="rw">und</span> <span class="rw">sich</span> <span class="rw">anfühlen</span> <span class="rw">wie</span> <span class="rw hot">nichts&nbsp;anderes.</span>
+        </p>
+      </div>
+    </section>
+
+    <!-- ============ STAGE 05 — ANIMATED PRICING EXAMPLE ============ -->
+    <section id="exStage" class="bg-paper px-5 py-24 text-ink sm:px-8 lg:py-32">
+      <div class="mx-auto max-w-shell">
+        <div class="mx-auto max-w-2xl text-center">
+          <span class="ex-reveal eyebrow text-sand-deep">05 — Live-Beispiel</span>
+          <h2 class="ex-reveal font-display h-tight mt-4 text-4xl font-bold text-ink sm:text-5xl" style="transition-delay:.05s">So cool kann sowas aussehen.</h2>
+          <p class="ex-reveal mt-4 text-lg text-body" style="transition-delay:.1s">Zahlen, die hochzählen. Ein Umschalter, der animiert. Karten, die auf dich reagieren — alles von Hand gebaut.</p>
+
+          <!-- UNMISSABLE example disclaimer -->
+          <div class="ex-reveal ex-note mx-auto mt-7 flex max-w-xl flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-2xl bg-sand/10 px-5 py-3 text-sm text-ink" style="transition-delay:.14s">
+            <span class="inline-flex items-center gap-1.5 font-semibold text-sand-deep">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+              Nur ein Beispiel
+            </span>
+            <span class="text-body">— frei erfundene Demo-Tarife, <strong class="font-semibold text-ink">nicht die Preise von SITELAB.</strong></span>
+            <a href="index.html#preise" class="font-semibold text-sand-deep underline decoration-sand/50 underline-offset-2 transition-colors hover:text-ink">Echte Preise ansehen →</a>
+          </div>
+
+          <!-- billing toggle -->
+          <div class="ex-reveal mt-9 flex items-center justify-center gap-3" style="transition-delay:.18s">
+            <div class="seg" role="group" aria-label="Abrechnungszeitraum (Beispiel)">
+              <span class="seg-ind" aria-hidden="true"></span>
+              <button type="button" aria-pressed="true">Monatlich</button>
+              <button type="button" aria-pressed="false">Jährlich</button>
+            </div>
+            <span class="rounded-full bg-sand/15 px-2.5 py-1 text-xs font-semibold text-sand-deep">−20 %</span>
+          </div>
+        </div>
+
+        <!-- cards -->
+        <div class="mt-14 grid items-start gap-6 lg:grid-cols-3">
+          <!-- Starter -->
+          <article class="ex-reveal price-card relative rounded-3xl border border-line bg-surface p-8" style="transition-delay:.06s">
+            <span class="ex-demo-tag">Demo</span>
+            <h3 class="font-display text-lg font-semibold text-ink">Starter</h3>
+            <p class="mt-1.5 text-sm text-body">Für den Anfang.</p>
+            <div class="mt-6 flex items-end gap-1">
+              <span class="font-display text-5xl font-bold text-ink">€<span class="count" data-m="9" data-y="86">0</span></span>
+              <span class="per mb-1.5 text-sm text-body">/ Monat</span>
+            </div>
+            <p class="bill-note mt-1 text-xs text-sand-deep">jährlich abgerechnet</p>
+            <ul class="mt-7 space-y-3 text-sm text-body">
+              <li class="flex gap-3"><svg class="feat-ic mt-0.5 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C26E16" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> 1 Projekt</li>
+              <li class="flex gap-3"><svg class="feat-ic mt-0.5 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C26E16" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Basis-Analytics</li>
+              <li class="flex gap-3"><svg class="feat-ic mt-0.5 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C26E16" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> E-Mail-Support</li>
+            </ul>
+            <button type="button" class="shine btn-ghost mt-8 w-full rounded-xl border border-line bg-paper px-5 py-3 text-sm font-semibold text-ink hover:border-ink/30 hover:bg-panel" tabindex="-1" aria-hidden="true">Auswählen</button>
+          </article>
+
+          <!-- Pro (popular, dark) -->
+          <article class="ex-reveal price-card popular relative rounded-3xl bg-night p-8 shadow-[0_40px_80px_-40px_rgba(250,159,66,.5)] lg:-mt-4 lg:pb-12" style="transition-delay:.12s">
+            <span class="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-sand px-4 py-1 text-xs font-semibold text-ink">Beliebt</span>
+            <span class="ex-demo-tag">Demo</span>
+            <h3 class="font-display text-lg font-semibold text-cream">Pro</h3>
+            <p class="mt-1.5 text-sm text-muted">Wenn's ernst wird.</p>
+            <div class="mt-6 flex items-end gap-1">
+              <span class="font-display text-5xl font-bold text-cream">€<span class="count" data-m="19" data-y="182">0</span></span>
+              <span class="per mb-1.5 text-sm text-muted">/ Monat</span>
+            </div>
+            <p class="bill-note mt-1 text-xs text-sand">jährlich abgerechnet</p>
+            <ul class="mt-7 space-y-3 text-sm text-muted">
+              <li class="flex gap-3"><svg class="feat-ic mt-0.5 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FA9F42" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Unbegrenzte Projekte</li>
+              <li class="flex gap-3"><svg class="feat-ic mt-0.5 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FA9F42" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Erweiterte Analytics</li>
+              <li class="flex gap-3"><svg class="feat-ic mt-0.5 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FA9F42" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Priorisierter Support</li>
+              <li class="flex gap-3"><svg class="feat-ic mt-0.5 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FA9F42" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Eigene Domain</li>
+            </ul>
+            <button type="button" class="shine btn-primary mt-8 w-full rounded-xl bg-sand px-5 py-3 text-sm font-semibold text-ink" tabindex="-1" aria-hidden="true">Auswählen</button>
+          </article>
+
+          <!-- Team -->
+          <article class="ex-reveal price-card relative rounded-3xl border border-line bg-surface p-8" style="transition-delay:.18s">
+            <span class="ex-demo-tag">Demo</span>
+            <h3 class="font-display text-lg font-semibold text-ink">Team</h3>
+            <p class="mt-1.5 text-sm text-body">Fürs ganze Team.</p>
+            <div class="mt-6 flex items-end gap-1">
+              <span class="font-display text-5xl font-bold text-ink">€<span class="count" data-m="39" data-y="374">0</span></span>
+              <span class="per mb-1.5 text-sm text-body">/ Monat</span>
+            </div>
+            <p class="bill-note mt-1 text-xs text-sand-deep">jährlich abgerechnet</p>
+            <ul class="mt-7 space-y-3 text-sm text-body">
+              <li class="flex gap-3"><svg class="feat-ic mt-0.5 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C26E16" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Alles aus Pro</li>
+              <li class="flex gap-3"><svg class="feat-ic mt-0.5 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C26E16" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Bis zu 10 Mitglieder</li>
+              <li class="flex gap-3"><svg class="feat-ic mt-0.5 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C26E16" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Rollen &amp; Rechte</li>
+              <li class="flex gap-3"><svg class="feat-ic mt-0.5 shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C26E16" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> Persönlicher Ansprechpartner</li>
+            </ul>
+            <button type="button" class="shine btn-ghost mt-8 w-full rounded-xl border border-line bg-paper px-5 py-3 text-sm font-semibold text-ink hover:border-ink/30 hover:bg-panel" tabindex="-1" aria-hidden="true">Auswählen</button>
+          </article>
+        </div>
+
+        <p class="ex-reveal mt-10 text-center text-xs text-body/80">Nochmal zur Sicherheit: Die obigen Tarife sind ein Design-Beispiel. <a href="index.html#preise" class="font-semibold text-sand-deep hover:text-ink">Meine echten Preise findest du hier →</a></p>
+      </div>
+    </section>
+
+    <!-- ============ FINAL CTA ============ -->
+    <section class="relative overflow-hidden bg-night px-5 py-28 text-center sm:px-8 sm:py-36">
+      <div class="pointer-events-none absolute inset-0" style="background:radial-gradient(40rem 22rem at 50% 0%, rgba(250,159,66,.30), transparent 60%), radial-gradient(34rem 20rem at 80% 120%, rgba(250,159,66,.18), transparent 60%)" aria-hidden="true"></div>
+      <div class="grain" aria-hidden="true"></div>
+      <div class="relative mx-auto max-w-2xl">
+        <span class="eyebrow text-sand">Erst der Anfang</span>
+        <h2 class="font-display h-tight mt-5 text-4xl font-bold text-cream sm:text-6xl">Das war ein Bruchteil<br />von dem, was geht.</h2>
+        <p class="mx-auto mt-6 max-w-lg text-lg text-muted">Erzähl mir, was du dir vorstellst — den Rest baue ich. Von Hand, im Festpreis, und am Ende gehört alles dir.</p>
+        <div class="mt-10 flex flex-wrap items-center justify-center gap-3.5">
+          <a href="konfigurator.html" class="btn-primary inline-flex items-center gap-2 rounded-xl bg-sand px-8 py-4 text-sm font-semibold text-ink">
+            Projekt anfragen
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a href="index.html" class="btn-ghost inline-flex items-center gap-2 rounded-xl border border-white/15 bg-white/5 px-8 py-4 text-sm font-semibold text-cream hover:border-white/30 hover:bg-white/10">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 18l-6-6 6-6"/></svg>
+            Zurück zur Startseite
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="border-t border-white/10 bg-night py-10 text-muted">
+    <div class="mx-auto flex max-w-shell flex-col items-center justify-between gap-4 px-5 text-xs text-muted/70 sm:flex-row sm:px-8">
+      <div class="flex items-center gap-2.5">
+        <span class="relative block h-6 w-6" aria-hidden="true">
+          <span class="absolute left-0 top-1.5 h-4 w-4 rounded-[5px] bg-sand"></span>
+          <span class="absolute left-1.5 top-0 h-4 w-4 rounded-[5px] bg-sand-deep"></span>
+        </span>
+        <span class="font-display text-base font-bold text-cream">SITE<span class="text-sand">LAB</span></span>
+      </div>
+      <span>© 2026 SITELAB · Mit Sorgfalt von Hand gebaut.</span>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+      const stages = Array.from(document.querySelectorAll('.stage'));
+      const bar = document.getElementById('progress');
+
+      const handlers = {
+        rail: function (p, stage) {
+          const track = stage.querySelector('.rail-track');
+          if (!track) return;
+          const max = track.scrollWidth - window.innerWidth;
+          track.style.transform = 'translate3d(' + (-max * p).toFixed(1) + 'px,0,0)';
+        },
+        reveal: function (p, stage) {
+          const words = stage.querySelectorAll('.rw');
+          const n = Math.round(clamp(p * 1.12, 0, 1) * words.length);
+          words.forEach(function (w, i) { w.classList.toggle('lit', i < n); });
+        }
+      };
+
+      function update() {
+        ticking = false;
+        const vh = window.innerHeight;
+        for (const s of stages) {
+          const r = s.getBoundingClientRect();
+          const span = r.height - vh;
+          const p = span > 0 ? clamp(-r.top / span, 0, 1) : 0;
+          s.style.setProperty('--p', p.toFixed(4));
+          const h = handlers[s.dataset.stage];
+          if (h) h(p, s);
+        }
+        const doc = document.documentElement;
+        const sp = doc.scrollTop / (doc.scrollHeight - doc.clientHeight || 1);
+        bar.style.transform = 'scaleX(' + clamp(sp, 0, 1).toFixed(4) + ')';
+      }
+
+      let ticking = false;
+      function onScroll() { if (!ticking) { ticking = true; requestAnimationFrame(update); } }
+
+      if (reduce) {
+        // Render a readable static state once; rail handler arranges cards as a wrapped grid.
+        stages.forEach(function (s) {
+          s.style.setProperty('--p', s.dataset.stage === 'rail' ? '0' : '1');
+        });
+        return;
+      }
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+      window.addEventListener('resize', update);
+      update();
+    })();
+
+    // ===== Mouse-driven 3D constellation + parallax =====
+    (function () {
+      const rig = document.getElementById('rig');
+      if (!rig) return;
+      const scene = rig.closest('.hero3d');
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+      const par = Array.from(document.querySelectorAll('[data-par]'));
+
+      if (reduce) { rig.style.transform = 'rotateX(-8deg) rotateY(-18deg)'; return; }
+
+      let mx = 0, my = 0, cx = 0, cy = 0, px = 0, py = 0, last = -9999;
+
+      window.addEventListener('pointermove', (e) => {
+        const r = scene.getBoundingClientRect();
+        mx = clamp(((e.clientX - r.left) / r.width - 0.5) * 2, -1, 1);
+        my = clamp(((e.clientY - r.top) / r.height - 0.5) * 2, -1, 1);
+        last = performance.now();
+      }, { passive: true });
+
+      function loop(t) {
+        const idle = t - last > 1800;
+        if (idle) { mx *= 0.95; my *= 0.95; }                 // ease back toward center
+        const iy = idle ? Math.sin(t / 1700) * 0.45 : 0;       // gentle self-rotation when idle
+        const ix = idle ? Math.sin(t / 2300) * 0.22 : 0;
+        const targetY = (mx + iy) * 24;                        // turn toward the cursor
+        const targetX = (-my + ix) * 15;
+        cx += (targetX - cx) * 0.07;                           // spring-ease the rotation
+        cy += (targetY - cy) * 0.07;
+        rig.style.transform = 'rotateX(' + cx.toFixed(2) + 'deg) rotateY(' + cy.toFixed(2) + 'deg)';
+
+        px += (-mx - px) * 0.08;
+        py += (-my - py) * 0.08;
+        for (const el of par) {
+          const f = parseFloat(el.dataset.par) * 60;
+          el.style.transform = 'translate3d(' + (px * f).toFixed(1) + 'px,' + (py * f).toFixed(1) + 'px,0)';
+        }
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
+    })();
+
+    // ===== Stage 05 — pricing example: count-up + billing toggle =====
+    (function () {
+      const stage = document.getElementById('exStage');
+      if (!stage) return;
+      const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const seg = stage.querySelector('.seg');
+      const btns = Array.from(seg.querySelectorAll('button'));
+      const counts = Array.from(stage.querySelectorAll('.count'));
+      let year = false;
+
+      function valueFor(el) { return parseInt(year ? el.dataset.y : el.dataset.m, 10); }
+      function setCount(el, to) {
+        if (reduce) { el.textContent = to; el.dataset.cur = to; return; }
+        const from = parseFloat(el.dataset.cur || '0'), start = performance.now(), dur = 900;
+        function tick(now) {
+          const p = Math.min((now - start) / dur, 1);
+          const e = 1 - Math.pow(1 - p, 3);             // easeOutCubic
+          const v = Math.round(from + (to - from) * e);
+          el.textContent = v; el.dataset.cur = v;
+          if (p < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+      }
+      function render() {
+        counts.forEach((el) => {
+          setCount(el, valueFor(el));
+          const card = el.closest('.price-card');
+          const per = card.querySelector('.per');
+          if (per) per.textContent = year ? '/ Jahr' : '/ Monat';
+          const note = card.querySelector('.bill-note');
+          if (note) note.textContent = 'entspricht €' + Math.round(parseInt(el.dataset.y, 10) / 12) + ' / Monat';
+        });
+        stage.classList.toggle('year', year);
+        seg.classList.toggle('year', year);
+        btns.forEach((b, i) => b.setAttribute('aria-pressed', String(i === (year ? 1 : 0))));
+      }
+      btns.forEach((b, i) => b.addEventListener('click', () => { year = (i === 1); render(); }));
+
+      let started = false;
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting && !started) {
+            started = true;
+            stage.querySelectorAll('.ex-reveal').forEach((el) => el.classList.add('in'));
+            render();                                    // counts animate from 0 on first view
+          }
+        });
+      }, { threshold: 0.2 });
+      io.observe(stage);
+    })();
+  </script>
+</body>
+</html>

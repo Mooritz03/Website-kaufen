@@ -66,6 +66,15 @@
     .work-card .work-img { transition: transform .8s var(--ease-spring); }
     .work-card:hover .work-img { transform: scale(1.05); }
 
+    /* Möglichkeiten teaser card */
+    .poss-card { transition: transform .5s var(--ease-spring), box-shadow .5s var(--ease-spring); box-shadow: 0 40px 90px -50px rgba(28,24,19,.6); }
+    .poss-card:hover { transform: translateY(-4px); box-shadow: 0 50px 100px -45px rgba(28,24,19,.7); }
+    .poss-card:hover .poss-arrow { transform: translateX(4px); }
+    .poss-grain { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+    @keyframes poss-float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+    .poss-chip { animation: poss-float 5.5s ease-in-out infinite; }
+    .poss-card:hover .poss-chip { border-color: rgba(250,159,66,.4); }
+
     a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible {
       outline: 2px solid #C26E16; outline-offset: 3px; border-radius: 3px;
     }
@@ -105,7 +114,7 @@
 
     @media (prefers-reduced-motion: reduce) {
       .reveal { opacity: 1 !important; transform: none !important; }
-      .orbit-ring, .orbit-node > div { animation: none !important; }
+      .orbit-ring, .orbit-node > div, .poss-chip { animation: none !important; }
       * { scroll-behavior: auto !important; }
     }
   </style>
@@ -126,7 +135,7 @@
       <nav class="hidden items-center gap-8 md:flex" aria-label="Hauptnavigation">
         <a href="#leistungen" class="nav-link text-sm font-medium text-body hover:text-ink">Leistungen</a>
         <a href="#ablauf" class="nav-link text-sm font-medium text-body hover:text-ink">Ablauf</a>
-        <a href="#arbeiten" class="nav-link text-sm font-medium text-body hover:text-ink">Arbeiten</a>
+        <a href="#arbeiten" class="nav-link text-sm font-medium text-body hover:text-ink">Möglichkeiten</a>
         <a href="#preise" class="nav-link text-sm font-medium text-body hover:text-ink">Preise</a>
         <a href="#faq" class="nav-link text-sm font-medium text-body hover:text-ink">FAQ</a>
       </nav>
@@ -333,49 +342,31 @@
       </ol>
     </section>
 
-    <!-- ============ ARBEITEN ============ -->
+    <!-- ============ MÖGLICHKEITEN (Teaser → Showcase) ============ -->
     <section id="arbeiten" class="border-y border-line bg-panel">
       <div class="mx-auto max-w-shell px-5 py-20 sm:px-8 lg:py-28">
-        <div class="reveal flex flex-wrap items-end justify-between gap-6">
-          <div class="max-w-2xl">
-            <span class="eyebrow text-sand-deep">Arbeiten</span>
-            <h2 class="font-display h-tight mt-4 text-3xl font-bold text-ink sm:text-4xl">Eine Auswahl gebauter Seiten</h2>
+        <a href="moeglichkeiten.html" class="poss-card reveal group relative block overflow-hidden rounded-3xl bg-night px-7 py-16 sm:px-14 sm:py-24">
+          <!-- ambient glow + grain -->
+          <div class="pointer-events-none absolute inset-0" style="background:radial-gradient(40rem 22rem at 50% -10%, rgba(250,159,66,.34), transparent 60%), radial-gradient(30rem 20rem at 88% 120%, rgba(250,159,66,.20), transparent 60%)" aria-hidden="true"></div>
+          <div class="poss-grain pointer-events-none absolute inset-0 opacity-[0.05] mix-blend-overlay" aria-hidden="true"></div>
+          <!-- floating preview chips -->
+          <div class="pointer-events-none absolute inset-0 hidden lg:block" aria-hidden="true">
+            <span class="poss-chip absolute left-[7%] top-[22%] rounded-xl border border-white/12 bg-white/5 px-3.5 py-2 text-xs font-medium text-cream backdrop-blur-sm">Scroll-Animation</span>
+            <span class="poss-chip absolute right-[9%] top-[28%] rounded-xl border border-white/12 bg-white/5 px-3.5 py-2 text-xs font-medium text-cream backdrop-blur-sm" style="animation-delay:-2.2s">3D-Effekte</span>
+            <span class="poss-chip absolute left-[13%] bottom-[20%] rounded-xl border border-white/12 bg-white/5 px-3.5 py-2 text-xs font-medium text-cream backdrop-blur-sm" style="animation-delay:-4.1s">Interaktive Tools</span>
+            <span class="poss-chip absolute right-[12%] bottom-[24%] rounded-xl border border-white/12 bg-white/5 px-3.5 py-2 text-xs font-medium text-cream backdrop-blur-sm" style="animation-delay:-1.3s">Shop &amp; Bezahlung</span>
           </div>
-          <p class="max-w-sm text-sm text-body">Jedes Projekt von Grund auf entworfen — vom kleinen Restaurant bis zur Software-Marke.</p>
-        </div>
 
-        <div class="mt-12 grid gap-6 md:grid-cols-3">
-          <a href="#kontakt" class="work-card group block">
-            <div class="overflow-hidden rounded-2xl border border-line">
-              <div class="work-img aspect-[4/3] bg-gradient-to-br from-sand/40 to-ink/10"></div>
-            </div>
-            <div class="mt-4">
-              <span class="text-xs font-semibold uppercase tracking-wider text-sand-deep">Markenseite</span>
-              <h3 class="font-display mt-1 text-lg font-semibold text-ink">Studio Nord</h3>
-              <p class="mt-1 text-sm text-body">One-Pager mit 40 % mehr Anfragen im ersten Monat.</p>
-            </div>
-          </a>
-          <a href="#kontakt" class="work-card group block">
-            <div class="overflow-hidden rounded-2xl border border-line">
-              <div class="work-img aspect-[4/3] bg-gradient-to-br from-ink/15 to-sand/35"></div>
-            </div>
-            <div class="mt-4">
-              <span class="text-xs font-semibold uppercase tracking-wider text-sand-deep">Gastronomie</span>
-              <h3 class="font-display mt-1 text-lg font-semibold text-ink">Café Lumen</h3>
-              <p class="mt-1 text-sm text-body">Website mit Tischreservierung und Speisekarte zum Pflegen.</p>
-            </div>
-          </a>
-          <a href="#kontakt" class="work-card group block">
-            <div class="overflow-hidden rounded-2xl border border-line">
-              <div class="work-img aspect-[4/3] bg-gradient-to-br from-sand/45 to-sand-deep/20"></div>
-            </div>
-            <div class="mt-4">
-              <span class="text-xs font-semibold uppercase tracking-wider text-sand-deep">SaaS / Web-App</span>
-              <h3 class="font-display mt-1 text-lg font-semibold text-ink">Frame</h3>
-              <p class="mt-1 text-sm text-body">Marketing-Seite plus Login-Bereich für ein junges Software-Team.</p>
-            </div>
-          </a>
-        </div>
+          <div class="relative mx-auto max-w-2xl text-center">
+            <span class="eyebrow text-sand">Möglichkeiten</span>
+            <h2 class="font-display h-tight mt-5 text-4xl font-bold leading-[1.02] text-cream sm:text-6xl">Was ist alles<br /><span class="gradient-text">möglich?</span></h2>
+            <p class="mx-auto mt-6 max-w-md text-lg text-muted">Vergiss die Galerie fertiger Seiten. Sieh selbst, was eine von Hand gebaute Website kann — auf einer eigenen Seite voller Animation.</p>
+            <span class="btn-primary mt-9 inline-flex items-center gap-2 rounded-xl bg-sand px-7 py-4 text-sm font-semibold text-ink">
+              Finde es heraus
+              <svg class="poss-arrow transition-transform duration-500" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </span>
+          </div>
+        </a>
       </div>
     </section>
 
@@ -629,7 +620,7 @@
           <h3 class="text-xs font-semibold uppercase tracking-wider text-cream/50">Studio</h3>
           <ul class="mt-4 space-y-3 text-sm">
             <li><a href="#" class="nav-link hover:text-cream">Über mich</a></li>
-            <li><a href="#arbeiten" class="nav-link hover:text-cream">Arbeiten</a></li>
+            <li><a href="moeglichkeiten.html" class="nav-link hover:text-cream">Möglichkeiten</a></li>
             <li><a href="#ablauf" class="nav-link hover:text-cream">Ablauf</a></li>
             <li><a href="#preise" class="nav-link hover:text-cream">Preise</a></li>
             <li><a href="#faq" class="nav-link hover:text-cream">FAQ</a></li>
